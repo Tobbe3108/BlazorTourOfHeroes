@@ -1,4 +1,4 @@
-﻿/// <binding ProjectOpened='watch-css' />
+/// <binding ProjectOpened='watch-css' />
 module.exports = function (grunt) {
     grunt.initConfig({// get the configuration info from package.json
         pkg: grunt.file.readJSON('package.json'),// create a clean task to remove production resource files under wwwroot

@@ -1,0 +1,55 @@
+﻿@page "/Hero/{Id:int}"
+@using Microsoft.AspNetCore.SignalR.Client
+@using BlazorTourOfHeroes.Shared
+@inject NavigationManager NavigationManager
+
+@if (_hero != null)
+{
+    <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md m-8">
+        <div class="flex justify-center">
+            <div class="font-bold text-xl mb-2">Hero details</div>
+        </div>
+        <div class="flex justify-center text-gray-700 text-base"><span>Id: </span><input @bind="_hero.Id" placeholder="Id" class="ml-1" /></div>
+        <div class="flex justify-center text-gray-700 text-base"><span>Name: </span><input @bind="_hero.Name" placeholder="Name" class="ml-1" /></div>
+        <div class="flex justify-center">
+            <button @onclick="SaveHero" disabled="@(!IsConnected)" class="bg-transparent hover:bg-blue-500 text-black font-semibold hover:text-white py-2 px-4 border border-black hover:border-transparent rounded">
+                Save
+            </button>
+        </div>
+    </div>
+
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    public Hero _hero { get; set; }
+
+    private HubConnection _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/chatHub"))
+            .Build();
+
+        _hubConnection.On<Hero>("ReceiveHero", (hero) =>
+        {
+            _hero = hero;
+            StateHasChanged();
+        });
+
+        await _hubConnection.StartAsync();
+        await GetHero();
+    }
+
+    Task GetHero() =>
+        _hubConnection.SendAsync("GetHero", _hubConnection.ConnectionId, Id);
+
+    Task SaveHero() =>
+        _hubConnection.SendAsync("SaveHero", _hero);
+
+    public bool IsConnected =>
+        _hubConnection.State == HubConnectionState.Connected;
+}

@@ -1,0 +1,44 @@
+﻿@page "/Heroes"
+@using Microsoft.AspNetCore.SignalR.Client
+@using BlazorTourOfHeroes.Shared
+@using BlazorTourOfHeroes.Client.Components
+@inject NavigationManager NavigationManager
+
+@if (_heroList == null)
+{
+    <p>Loading Heroes...</p>
+}
+else
+{
+    foreach (Hero hero in _heroList)
+    {
+        <HeroCard hero="hero" />
+    }
+}
+
+@code {
+    private HubConnection _hubConnection;
+    public List<Hero> _heroList { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hubConnection = new HubConnectionBuilder()
+        .WithUrl(NavigationManager.ToAbsoluteUri("/chatHub"))
+        .Build();
+
+        _hubConnection.On<List<Hero>>("ReceiveHeroList", (heroList) =>
+        {
+            _heroList = heroList;
+            StateHasChanged();
+        });
+
+        await _hubConnection.StartAsync();
+        await GetHeroList();
+    }
+
+    Task GetHeroList() =>
+        _hubConnection.SendAsync("GetHeroList", _hubConnection.ConnectionId);
+
+    public bool IsConnected =>
+        _hubConnection.State == HubConnectionState.Connected;
+}

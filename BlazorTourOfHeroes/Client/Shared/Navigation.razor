@@ -1,0 +1,20 @@
+﻿<ul class="flex">
+    <li class="mr-3">
+        <a class="@((Active == "Dashboard") ? active : inactive)" @onclick="@(() => ActiveChange("Dashboard"))" href="/Top">Dashboard</a>
+    </li>
+    <li class="mr-3">
+        <a class="@((Active == "Heroes") ? active : inactive)" @onclick="@(() => ActiveChange("Heroes"))" href="/Heroes">Heroes</a>
+    </li>
+</ul>
+
+@code {
+    const string active = "inline-block border border-blue-500 rounded py-1 px-3 bg-blue-500 text-white";
+    const string inactive = "inline-block border border-white rounded hover:border-gray-200 text-blue-500 hover:bg-gray-200 py-1 px-3";
+    public string Active { get; set; } = "Dashboard";
+
+    public void ActiveChange(string activePill)
+    {
+        Active = activePill;
+    }
+
+}

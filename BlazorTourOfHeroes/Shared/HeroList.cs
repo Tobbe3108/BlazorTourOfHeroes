@@ -9,6 +9,7 @@ namespace BlazorTourOfHeroes.Shared
     public interface IHeroList
     {
         List<Hero> _HeroList { get; set; }
+        List<Hero> _TopHeroes { get; set; }
     }
 
     public class HeroList : IHeroList
@@ -66,5 +67,29 @@ namespace BlazorTourOfHeroes.Shared
                 Name = "Tornado"
             }
         };
+        public List<Hero> _TopHeroes { get; set; } = new List<Hero>()
+        {
+            new Hero()
+            {
+                Id = 12,
+                Name = "Narco"
+            },
+            new Hero()
+            {
+                Id = 13,
+                Name = "Bombasto"
+            },
+            new Hero()
+            {
+                Id = 14,
+                Name = "Celeritas"
+            },
+            new Hero()
+            {
+                Id = 15,
+                Name = "Magneta"
+            },
+        };
+
     }
 }

@@ -4,48 +4,43 @@
 @using BlazorTourOfHeroes.Client.Components
 @inject NavigationManager NavigationManager
 
-@if (_hero != null)
-{
-    <div class="max-w-sm mx-auto p-6 bg-white rounded-lg shadow-md m-8">
-        <div class="flex justify-center w-full h-auto">
-            <p class="font-bold text-xl mb-2">Hero details</p>
+<div class="max-w-sm mx-auto p-6 bg-white rounded-lg shadow-md m-8">
+    <div class="flex justify-center w-full h-auto">
+        <p class="font-bold text-xl mb-2">Hero details</p>
+    </div>
+    <div class="flex items-center">
+        <div class="flex justify-start w-2/3 h-auto">
+            <div class="text-base"><span>Name: </span><input @bind="localHero.Name" placeholder="Name" class="ml-1 w-20" /></div>
         </div>
-        <div class="flex items-center">
-            <div class="flex justify-start w-2/3 h-auto">
-                <div class="text-base"><span>Name: </span><input @bind="_hero.Name" placeholder="Name" class="ml-1 w-20" /></div>
-            </div>
-            <div class="flex justify-center w-1/3 h-auto">
-                <a href="/Heroes" @onclick="SaveHero" disabled="@(!IsConnected)" class="bg-transparent hover:bg-blue-500 text-black font-semibold hover:text-white py-2 px-4 border border-black hover:border-transparent rounded m-1">
-                    Save
-                </a>
-            </div>
-        </div>
-        <div class="flex items-center">
-            <div class="flex justify-start w-2/3 h-auto">
-                <div class="text-base"><span>Id: </span><p class="ml-1 w-20">@_hero.Id</p></div>
-            </div>
-            <div class="flex justify-center w-1/3 h-auto">
-                <a href="/Heroes" class="bg-transparent hover:bg-blue-500 text-black font-semibold hover:text-white py-2 px-4 border border-black hover:border-transparent rounded m-1">
-                    Back
-                </a>
-            </div>
+        <div class="flex justify-center w-1/3 h-auto">
+            <a href="/Heroes" @onclick="SaveHero" disabled="@(!IsConnected)" class="bg-transparent hover:bg-blue-500 text-black font-semibold hover:text-white py-2 px-4 border border-black hover:border-transparent rounded m-1">
+                Save
+            </a>
         </div>
     </div>
+    <div class="flex items-center">
+        <div class="flex justify-start w-2/3 h-auto">
+            <div class="text-base"><span>Id: </span><p class="ml-1 w-20">@localHero.Id</p></div>
+        </div>
+        <div class="flex justify-center w-1/3 h-auto">
+            <a href="/Heroes" class="bg-transparent hover:bg-blue-500 text-black font-semibold hover:text-white py-2 px-4 border border-black hover:border-transparent rounded m-1">
+                Back
+            </a>
+        </div>
+    </div>
+</div>
 
-    @if (_UpdateState)
-    {
-        <AllertBadge OnClick="ClickHandler" text="This hero was updated by another user"></AllertBadge>
-    }
+@if (newData)
+{
+    <AllertBadge OnClick="@OnClick" />
 }
 
 @code {
     #region Parameters
-    [Parameter]
-    public int Id { get; set; }
-
-    public Hero _hero { get; set; }
-
-    public bool _UpdateState { get; set; }
+    [Parameter] public int Id { get; set; }
+    [CascadingParameter] protected HeroState State { get; set; }
+    public Hero localHero { get; set; }
+    public bool newData { get; set; } = false;
     #endregion
 
     #region SignalR
@@ -53,40 +48,36 @@
     protected override async Task OnInitializedAsync()
     {
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/chatHub"))
+            .WithUrl(NavigationManager.ToAbsoluteUri("/HeroHub"))
+            .WithAutomaticReconnect()
             .Build();
 
-        _hubConnection.On<Hero>("ReceiveHero", (hero) =>
-        {
-            _hero = hero;
-            StateHasChanged();
-        });
-
-        _hubConnection.On<bool>("UpdateHero", (state) =>
-        {
-            _UpdateState = state;
-            StateHasChanged();
-        });
-
         await _hubConnection.StartAsync();
-        await GetHero();
     }
 
-    Task GetHero() =>
-        _hubConnection.SendAsync("GetHero", _hubConnection.ConnectionId, Id);
-
-    Task SaveHero() =>
-        _hubConnection.SendAsync("SaveHero", _hero);
+    async Task SaveHero()
+    {
+        await _hubConnection.SendAsync("SaveHero", localHero);
+    }
 
     public bool IsConnected =>
         _hubConnection.State == HubConnectionState.Connected;
     #endregion
 
-    #region Events
-    async Task ClickHandler()
+    protected override void OnInitialized()
     {
-        await GetHero();
-        _UpdateState = false;
+        localHero = State.HeroList.Find(hero => hero.Id == Id);
+
+        State.OnStateChanged += () =>
+        {
+            newData = true;
+            StateHasChanged();
+        };
     }
-    #endregion
+
+    private void OnClick()
+    {
+        newData = false;
+        localHero = State.HeroList.Find(hero => hero.Id == Id);
+    }
 }

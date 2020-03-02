@@ -15,7 +15,6 @@ namespace BlazorTourOfHeroes.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IHeroList, HeroList>();
             services.AddSignalR();
             services.AddMvc();
             services.AddResponseCompression(opts =>
@@ -44,7 +43,7 @@ namespace BlazorTourOfHeroes.Server
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();
-                endpoints.MapHub<ChatHub>("/chatHub");
+                endpoints.MapHub<HeroHub>("/HeroHub");
                 endpoints.MapFallbackToClientSideBlazor<Client.Program>("index.html");
             });
         }

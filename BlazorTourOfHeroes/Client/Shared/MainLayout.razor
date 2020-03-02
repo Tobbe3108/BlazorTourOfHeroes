@@ -1,7 +1,20 @@
 ﻿@inherits LayoutComponentBase
+@using BlazorTourOfHeroes.Shared
 
 <Navigation />
 
 <div>
-    @Body
+    <CascadingValue Value="state">
+        @Body
+    </CascadingValue>
 </div>
+
+@code{
+    private HeroState state;
+
+    protected override void OnInitialized()
+    {
+        state = new HeroState();
+        state.OnStateChanged += StateHasChanged;
+    }
+}

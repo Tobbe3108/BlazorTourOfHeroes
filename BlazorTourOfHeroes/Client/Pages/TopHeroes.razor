@@ -1,54 +1,12 @@
 ﻿@page "/Top"
-@using Microsoft.AspNetCore.SignalR.Client
-@using BlazorTourOfHeroes.Shared
 @using BlazorTourOfHeroes.Client.Components
-@inject NavigationManager NavigationManager
+@using BlazorTourOfHeroes.Shared
 
-@if (_TopHeroList == null)
+@foreach (Hero hero in State.TopHeroes)
 {
-    <p>Loading Heroes...</p>
-}
-else
-{
-    foreach (Hero hero in _TopHeroList)
-    {
-        <HeroCard hero="hero" />
-    }
+    <HeroCard hero="hero" />
 }
 
 @code {
-    #region Parameters
-    public List<Hero> _TopHeroList { get; set; }
-    #endregion
-
-    #region SignalR
-    private HubConnection _hubConnection;
-    protected override async Task OnInitializedAsync()
-    {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/chatHub"))
-            .Build();
-
-        _hubConnection.On<List<Hero>>("ReceiveTopHeroList", (topHeroList) =>
-        {
-            _TopHeroList = topHeroList;
-            StateHasChanged();
-        });
-
-        _hubConnection.On<Hero>("ReceiveHero", (hero) =>
-        {
-            _TopHeroList.Add(hero);
-            StateHasChanged();
-        });
-
-        await _hubConnection.StartAsync();
-        await GetTopHeroList();
-    }
-
-    Task GetTopHeroList() =>
-        _hubConnection.SendAsync("GetTopHeroList", _hubConnection.ConnectionId);
-
-    public bool IsConnected =>
-        _hubConnection.State == HubConnectionState.Connected;
-    #endregion
+    [CascadingParameter] protected HeroState State { get; set; }
 }
